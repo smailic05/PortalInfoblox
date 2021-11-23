@@ -1,13 +1,16 @@
 syntax = "proto3";
 
-package myapp;
+package myresponder;
 
 import "google/protobuf/empty.proto";
 import "google/api/annotations.proto";
+import "github.com/envoyproxy/protoc-gen-validate/validate/validate.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
 
-option go_package = "github.com/my-app/pkg/pb;pb";
 
-// The MyApp service, GetVersion RPC, and Version message
+option go_package = "github.com/my-responder/pkg/pb;pb";
+
+// The MyResponder service, GetVersion RPC, and Version message
 // make up a simple "starter" example. It allows the Atlas CLI to generate an
 // end-to-end example for the sake of demonstration. Feel free to change 
 // GetVersion to better-suit how your versioning system, or get rid of it entirely.
@@ -20,7 +23,7 @@ option go_package = "github.com/my-app/pkg/pb;pb";
 
 // Happy protobuffing!
 
-// TODO: Write a protobuf schema for the MyApp service. The 
+// TODO: Write a protobuf schema for the MyResponder service. The 
 // messages and RPCs will compose the API for the service.
 
 // TODO: Structure your own protobuf messages. Each protocol buffer message is a 
@@ -62,40 +65,26 @@ message GetRequestsResponse {
   int64 requests = 1;
 }
 
-
-// TODO: Define the MyApp service and its methods. Feel free
-// to change the name of MyApp to better-suit your naming
+// TODO: Define the MyResponder service and its methods. Feel free
+// to change the name of MyResponder to better-suit your naming
 // conventions.
-service MyApp {
+service MyResponder {
   rpc GetVersion (google.protobuf.Empty) returns (VersionResponse) {
-    // TODO: Provide mappings between REST endpoints and service methods.
-    option (google.api.http) = {
-      get: "/version"
-    };
+    
   }
-
   rpc UpdateDescription (UpdateDescriptionRequest) returns (UpdateDescriptionResponse){
-    option (google.api.http) = {
-        post: "/update"
-        body: "*"
-    };
+
   }
 
   rpc GetDescription (GetDescriptionRequest) returns (GetDescriptionResponse){
-    option (google.api.http) = {
-        get: "/info/{service}"
-    };
+
   }
 
   rpc GetUptime (GetUptimeRequest) returns (GetUptimeResponse){
-    option (google.api.http) = {
-        get: "/uptime/{service}"
-    };
+
   }
 
   rpc GetRequests (GetRequestsRequest) returns (GetRequestsResponse){
-    option (google.api.http) = {
-        get: "/requests/{service}"
-    };
+
   }
 }
