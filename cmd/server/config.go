@@ -7,12 +7,12 @@ const (
 
 	// Server
 	defaultServerAddress = "0.0.0.0"
-	defaultServerPort    = "9090"
+	defaultServerPort    = "9092"
 
 	// Gateway
 	defaultGatewayEnable      = true
 	defaultGatewayAddress     = "0.0.0.0"
-	defaultGatewayPort        = "8080"
+	defaultGatewayPort        = "8083"
 	defaultGatewayURL         = "/my-app/v1/"
 	defaultGatewaySwaggerFile = "pkg/pb/service.swagger.json"
 
@@ -55,7 +55,7 @@ const (
 	// Health
 	defaultInternalEnable    = true
 	defaultInternalAddress   = "0.0.0.0"
-	defaultInternalPort      = "8081"
+	defaultInternalPort      = "8082"
 	defaultInternalHealth    = "/healthz"
 	defaultInternalReadiness = "/ready"
 
