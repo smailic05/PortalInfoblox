@@ -7,24 +7,7 @@ import "google/api/annotations.proto";
 
 option go_package = "github.com/my-app/pkg/pb;pb";
 
-// The MyApp service, GetVersion RPC, and Version message
-// make up a simple "starter" example. It allows the Atlas CLI to generate an
-// end-to-end example for the sake of demonstration. Feel free to change 
-// GetVersion to better-suit how your versioning system, or get rid of it entirely.
 
-// Here are some helpful resources to aid you in your protobuf quest:
-// https://github.com/infobloxopen/atlas-contacts-app/blob/master/proto/contacts.proto
-// https://developers.google.com/protocol-buffers/docs/proto
-// https://github.com/grpc-ecosystem/grpc-gateway
-// https://developers.google.com/protocol-buffers/docs/style
-
-// Happy protobuffing!
-
-// TODO: Write a protobuf schema for the MyApp service. The 
-// messages and RPCs will compose the API for the service.
-
-// TODO: Structure your own protobuf messages. Each protocol buffer message is a 
-// small logical record of information, containing a series of name-value pairs.
 message VersionResponse {
   string version = 1;
 }
@@ -62,6 +45,27 @@ message GetRequestsResponse {
   int64 requests = 1;
 }
 
+message GetModeRequest {
+}
+
+message GetModeResponse {
+  int64 mode = 1;
+}
+
+message SetModeRequest {
+  int64 mode = 1;
+}
+
+message SetModeResponse {
+  int64 mode = 1;
+}
+
+message RestartRequest {
+  int64 service = 1;
+}
+
+message RestartResponse {
+}
 
 // TODO: Define the MyApp service and its methods. Feel free
 // to change the name of MyApp to better-suit your naming
@@ -96,6 +100,24 @@ service MyApp {
   rpc GetRequests (GetRequestsRequest) returns (GetRequestsResponse){
     option (google.api.http) = {
         get: "/requests/{service}"
+    };
+  }
+
+  rpc GetMode (GetModeRequest) returns (GetModeResponse){
+    option (google.api.http) = {
+        get: "/mode"
+    };
+  }
+
+  rpc SetMode (SetModeRequest) returns (SetModeResponse){
+    option (google.api.http) = {
+        get: "/mode/{mode}"
+    };
+  }
+
+  rpc Restart (RestartRequest) returns (RestartResponse){
+    option (google.api.http) = {
+        get: "/restart/{service}"
     };
   }
 }

@@ -4,10 +4,10 @@ package pb
 
 import (
 	context "context"
+	empty "github.com/golang/protobuf/ptypes/empty"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
-	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -19,11 +19,14 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type MyAppClient interface {
-	GetVersion(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*VersionResponse, error)
+	GetVersion(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*VersionResponse, error)
 	UpdateDescription(ctx context.Context, in *UpdateDescriptionRequest, opts ...grpc.CallOption) (*UpdateDescriptionResponse, error)
 	GetDescription(ctx context.Context, in *GetDescriptionRequest, opts ...grpc.CallOption) (*GetDescriptionResponse, error)
 	GetUptime(ctx context.Context, in *GetUptimeRequest, opts ...grpc.CallOption) (*GetUptimeResponse, error)
 	GetRequests(ctx context.Context, in *GetRequestsRequest, opts ...grpc.CallOption) (*GetRequestsResponse, error)
+	GetMode(ctx context.Context, in *GetModeRequest, opts ...grpc.CallOption) (*GetModeResponse, error)
+	SetMode(ctx context.Context, in *SetModeRequest, opts ...grpc.CallOption) (*SetModeResponse, error)
+	Restart(ctx context.Context, in *RestartRequest, opts ...grpc.CallOption) (*RestartResponse, error)
 }
 
 type myAppClient struct {
@@ -34,7 +37,7 @@ func NewMyAppClient(cc grpc.ClientConnInterface) MyAppClient {
 	return &myAppClient{cc}
 }
 
-func (c *myAppClient) GetVersion(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*VersionResponse, error) {
+func (c *myAppClient) GetVersion(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*VersionResponse, error) {
 	out := new(VersionResponse)
 	err := c.cc.Invoke(ctx, "/myapp.MyApp/GetVersion", in, out, opts...)
 	if err != nil {
@@ -79,22 +82,53 @@ func (c *myAppClient) GetRequests(ctx context.Context, in *GetRequestsRequest, o
 	return out, nil
 }
 
+func (c *myAppClient) GetMode(ctx context.Context, in *GetModeRequest, opts ...grpc.CallOption) (*GetModeResponse, error) {
+	out := new(GetModeResponse)
+	err := c.cc.Invoke(ctx, "/myapp.MyApp/GetMode", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *myAppClient) SetMode(ctx context.Context, in *SetModeRequest, opts ...grpc.CallOption) (*SetModeResponse, error) {
+	out := new(SetModeResponse)
+	err := c.cc.Invoke(ctx, "/myapp.MyApp/SetMode", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *myAppClient) Restart(ctx context.Context, in *RestartRequest, opts ...grpc.CallOption) (*RestartResponse, error) {
+	out := new(RestartResponse)
+	err := c.cc.Invoke(ctx, "/myapp.MyApp/Restart", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MyAppServer is the server API for MyApp service.
-// All implementations should embed UnimplementedMyAppServer
+// All implementations must embed UnimplementedMyAppServer
 // for forward compatibility
 type MyAppServer interface {
-	GetVersion(context.Context, *emptypb.Empty) (*VersionResponse, error)
+	GetVersion(context.Context, *empty.Empty) (*VersionResponse, error)
 	UpdateDescription(context.Context, *UpdateDescriptionRequest) (*UpdateDescriptionResponse, error)
 	GetDescription(context.Context, *GetDescriptionRequest) (*GetDescriptionResponse, error)
 	GetUptime(context.Context, *GetUptimeRequest) (*GetUptimeResponse, error)
 	GetRequests(context.Context, *GetRequestsRequest) (*GetRequestsResponse, error)
+	GetMode(context.Context, *GetModeRequest) (*GetModeResponse, error)
+	SetMode(context.Context, *SetModeRequest) (*SetModeResponse, error)
+	Restart(context.Context, *RestartRequest) (*RestartResponse, error)
+	mustEmbedUnimplementedMyAppServer()
 }
 
-// UnimplementedMyAppServer should be embedded to have forward compatible implementations.
+// UnimplementedMyAppServer must be embedded to have forward compatible implementations.
 type UnimplementedMyAppServer struct {
 }
 
-func (UnimplementedMyAppServer) GetVersion(context.Context, *emptypb.Empty) (*VersionResponse, error) {
+func (UnimplementedMyAppServer) GetVersion(context.Context, *empty.Empty) (*VersionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetVersion not implemented")
 }
 func (UnimplementedMyAppServer) UpdateDescription(context.Context, *UpdateDescriptionRequest) (*UpdateDescriptionResponse, error) {
@@ -109,6 +143,16 @@ func (UnimplementedMyAppServer) GetUptime(context.Context, *GetUptimeRequest) (*
 func (UnimplementedMyAppServer) GetRequests(context.Context, *GetRequestsRequest) (*GetRequestsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetRequests not implemented")
 }
+func (UnimplementedMyAppServer) GetMode(context.Context, *GetModeRequest) (*GetModeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetMode not implemented")
+}
+func (UnimplementedMyAppServer) SetMode(context.Context, *SetModeRequest) (*SetModeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetMode not implemented")
+}
+func (UnimplementedMyAppServer) Restart(context.Context, *RestartRequest) (*RestartResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Restart not implemented")
+}
+func (UnimplementedMyAppServer) mustEmbedUnimplementedMyAppServer() {}
 
 // UnsafeMyAppServer may be embedded to opt out of forward compatibility for this service.
 // Use of this interface is not recommended, as added methods to MyAppServer will
@@ -122,7 +166,7 @@ func RegisterMyAppServer(s grpc.ServiceRegistrar, srv MyAppServer) {
 }
 
 func _MyApp_GetVersion_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(emptypb.Empty)
+	in := new(empty.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -134,7 +178,7 @@ func _MyApp_GetVersion_Handler(srv interface{}, ctx context.Context, dec func(in
 		FullMethod: "/myapp.MyApp/GetVersion",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MyAppServer).GetVersion(ctx, req.(*emptypb.Empty))
+		return srv.(MyAppServer).GetVersion(ctx, req.(*empty.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -211,6 +255,60 @@ func _MyApp_GetRequests_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _MyApp_GetMode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetModeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MyAppServer).GetMode(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/myapp.MyApp/GetMode",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MyAppServer).GetMode(ctx, req.(*GetModeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MyApp_SetMode_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetModeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MyAppServer).SetMode(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/myapp.MyApp/SetMode",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MyAppServer).SetMode(ctx, req.(*SetModeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MyApp_Restart_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RestartRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MyAppServer).Restart(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/myapp.MyApp/Restart",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MyAppServer).Restart(ctx, req.(*RestartRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // MyApp_ServiceDesc is the grpc.ServiceDesc for MyApp service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -238,7 +336,19 @@ var MyApp_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "GetRequests",
 			Handler:    _MyApp_GetRequests_Handler,
 		},
+		{
+			MethodName: "GetMode",
+			Handler:    _MyApp_GetMode_Handler,
+		},
+		{
+			MethodName: "SetMode",
+			Handler:    _MyApp_SetMode_Handler,
+		},
+		{
+			MethodName: "Restart",
+			Handler:    _MyApp_Restart_Handler,
+		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "github.com/my-app/pkg/pb/service.proto",
+	Metadata: "pkg/pb/service.proto",
 }
