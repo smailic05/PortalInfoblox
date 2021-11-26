@@ -2,12 +2,13 @@ package svc
 
 import (
 	"context"
-	"flag"
+	"sync"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/my-app/pkg/pb"
 	rpb "github.com/my-app/pkg/resp_pb"
+	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -18,22 +19,20 @@ const (
 	version = "0.0.1"
 )
 
-var (
-	serverAddr = flag.String("addr", "localhost:9099", "The server address in the format of host:port")
-)
-
 // Default implementation of the MyApp server interface
 type server struct {
 	pb.UnimplementedMyAppServer
 	Description string
 	Timestamp   time.Time
 	Requests    int64
+	mtx         sync.RWMutex
 }
 
 func GRPCConnect() (*grpc.ClientConn, error) {
 	var opts []grpc.DialOption
 	opts = append(opts, grpc.WithInsecure())
-	conn, err := grpc.Dial(*serverAddr, opts...)
+	addr := viper.GetString("addr")
+	conn, err := grpc.Dial(addr, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -41,19 +40,11 @@ func GRPCConnect() (*grpc.ClientConn, error) {
 }
 
 // GetVersion returns the current version of the service
-func (*server) GetVersion(context.Context, *empty.Empty) (*pb.VersionResponse, error) {
-	conn, err := GRPCConnect()
-	if err != nil {
-		return nil, err
-	}
-	defer conn.Close()
-	client := rpb.NewMyResponderClient(conn)
-	resp, err := client.GetVersion(context.Background(), &empty.Empty{})
-	if err != nil {
-		return nil, err
-	}
-	return &pb.VersionResponse{Version: resp.Version}, nil
+func (s *server) GetVersion(context.Context, *empty.Empty) (*pb.VersionResponse, error) {
+	return &pb.VersionResponse{Version: version}, nil
+	//TODO use hash commit as version
 }
+
 func (s *server) UpdateDescription(ctx context.Context, req *pb.UpdateDescriptionRequest) (*pb.UpdateDescriptionResponse, error) {
 	if req.GetDescription() == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "Description can't be empty")
@@ -71,7 +62,7 @@ func (s *server) UpdateDescription(ctx context.Context, req *pb.UpdateDescriptio
 		}
 		return &pb.UpdateDescriptionResponse{Description: resp.Description}, nil
 	}
-	s.Requests += 1
+	s.IncRequests()
 	s.Description = req.Description
 	return &pb.UpdateDescriptionResponse{Description: s.Description}, nil
 }
@@ -91,7 +82,7 @@ func (s *server) GetDescription(ctx context.Context, req *pb.GetDescriptionReque
 		return &pb.GetDescriptionResponse{Description: resp.Description}, nil
 
 	}
-	s.Requests += 1
+	s.IncRequests()
 	return &pb.GetDescriptionResponse{Description: s.Description}, nil
 }
 
@@ -111,7 +102,7 @@ func (s *server) GetUptime(ctx context.Context, req *pb.GetUptimeRequest) (*pb.G
 		return &pb.GetUptimeResponse{Uptime: resp.Uptime}, nil
 
 	}
-	s.Requests += 1
+	s.IncRequests()
 	uptime := time.Now().Unix() - s.Timestamp.Unix()
 	return &pb.GetUptimeResponse{Uptime: uptime}, nil
 }
@@ -131,8 +122,58 @@ func (s *server) GetRequests(ctx context.Context, req *pb.GetRequestsRequest) (*
 		return &pb.GetRequestsResponse{Requests: resp.Requests}, nil
 
 	}
-	s.Requests += 1
-	return &pb.GetRequestsResponse{Requests: s.Requests}, nil
+	s.IncRequests()
+	return &pb.GetRequestsResponse{Requests: int64(s.GetRequestsFromServer())}, nil
+}
+
+func (s *server) GetMode(ctx context.Context, req *pb.GetModeRequest) (*pb.GetModeResponse, error) {
+	conn, err := GRPCConnect()
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+	client := rpb.NewMyResponderClient(conn)
+	resp, err := client.GetMode(ctx, &rpb.GetModeRequest{})
+	if err != nil {
+		return nil, err
+	}
+	s.IncRequests()
+	return &pb.GetModeResponse{Mode: resp.Mode}, nil
+}
+
+func (s *server) SetMode(ctx context.Context, req *pb.SetModeRequest) (*pb.SetModeResponse, error) {
+	conn, err := GRPCConnect()
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+	client := rpb.NewMyResponderClient(conn)
+	resp, err := client.SetMode(ctx, &rpb.SetModeRequest{})
+	if err != nil {
+		return nil, err
+	}
+	s.IncRequests()
+	return &pb.SetModeResponse{Mode: resp.Mode}, nil
+}
+
+func (s *server) Restart(ctx context.Context, req *pb.RestartRequest) (*pb.RestartResponse, error) {
+	if req.Service != 1 {
+		conn, err := GRPCConnect()
+		if err != nil {
+			return nil, err
+		}
+		defer conn.Close()
+		client := rpb.NewMyResponderClient(conn)
+		_, err = client.Restart(ctx, &rpb.RestartRequest{})
+		if err != nil {
+			return nil, err
+		}
+		return &pb.RestartResponse{}, nil
+	}
+	s.Description = viper.GetString("app.id")
+	s.Timestamp = time.Now()
+	s.Requests = 0
+	return &pb.RestartResponse{}, nil
 }
 
 // NewBasicServer returns an instance of the default server interface
@@ -140,4 +181,17 @@ func NewBasicServer() (pb.MyAppServer, error) {
 	return &server{Description: "Portal", Timestamp: time.Now()}, nil
 	//TODO use Viper
 	//Incapsulate client
+}
+
+func (s *server) GetRequestsFromServer() int {
+	s.mtx.RLock()
+	tmp := s.Requests
+	s.mtx.RUnlock()
+	return int(tmp)
+}
+
+func (s *server) IncRequests() {
+	s.mtx.Lock()
+	s.Requests++
+	s.mtx.Unlock()
 }
