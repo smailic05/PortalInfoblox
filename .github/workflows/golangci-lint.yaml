@@ -1,8 +1,8 @@
 name: golangci-lint
 on:
-  pull_request:
+    push:
       paths-ignore:
-      - 'docs/**'
+      - 'cmd/config.go'
 jobs:
   golangci:
     name: lint
