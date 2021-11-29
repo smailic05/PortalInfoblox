@@ -6,13 +6,14 @@ const (
 	// configuration defaults support local development (i.e. "go run ...")
 
 	// Server
-	defaultServerAddress = "0.0.0.0"
-	defaultServerPort    = "9092"
+	defaultServerAddress     = "0.0.0.0"
+	defaultServerPort        = "9090"
+	defaultServerAddressPort = "localhost:9090"
 
 	// Gateway
 	defaultGatewayEnable      = true
 	defaultGatewayAddress     = "0.0.0.0"
-	defaultGatewayPort        = "8083"
+	defaultGatewayPort        = "8080"
 	defaultGatewayURL         = "/my-app/v1/"
 	defaultGatewaySwaggerFile = "pkg/pb/service.swagger.json"
 
@@ -62,7 +63,7 @@ const (
 	defaultConfigDirectory = "deploy/"
 	defaultConfigFile      = ""
 	defaultSecretFile      = ""
-	defaultApplicationID   = "my-app"
+	defaultApplicationID   = "portal"
 
 	// Heartbeat
 	defaultKeepaliveTime    = 10
@@ -74,6 +75,9 @@ const (
 
 var (
 	// define flag overrides
+
+	serverAddr = pflag.String("server.address.full", defaultServerAddressPort, "The server address in the format of host:port")
+
 	flagServerAddress = pflag.String("server.address", defaultServerAddress, "adress of gRPC server")
 	flagServerPort    = pflag.String("server.port", defaultServerPort, "port of gRPC server")
 
