@@ -43,7 +43,7 @@ func GRPCConnect() (*grpc.ClientConn, error) {
 // GetVersion returns the current version of the service
 func (s *server) GetVersion(context.Context, *empty.Empty) (*pb.VersionResponse, error) {
 	return &pb.VersionResponse{Version: version}, nil
-	//TODO use hash commit as version
+	// TODO use hash commit as version
 }
 
 func (s *server) UpdateDescription(ctx context.Context, req *pb.UpdateDescriptionRequest) (*pb.UpdateDescriptionResponse, error) {
@@ -81,7 +81,6 @@ func (s *server) GetDescription(ctx context.Context, req *pb.GetDescriptionReque
 			return nil, err
 		}
 		return &pb.GetDescriptionResponse{Description: resp.Description}, nil
-
 	}
 	s.IncRequests()
 	return &pb.GetDescriptionResponse{Description: s.GetDescriptionFromServer()}, nil
@@ -101,7 +100,6 @@ func (s *server) GetUptime(ctx context.Context, req *pb.GetUptimeRequest) (*pb.G
 			return nil, err
 		}
 		return &pb.GetUptimeResponse{Uptime: resp.Uptime}, nil
-
 	}
 	s.IncRequests()
 	uptime := time.Now().Unix() - s.Timestamp.Unix()
@@ -121,7 +119,6 @@ func (s *server) GetRequests(ctx context.Context, req *pb.GetRequestsRequest) (*
 			return nil, err
 		}
 		return &pb.GetRequestsResponse{Requests: resp.Requests}, nil
-
 	}
 	s.IncRequests()
 	return &pb.GetRequestsResponse{Requests: int64(s.GetRequestsFromServer())}, nil
