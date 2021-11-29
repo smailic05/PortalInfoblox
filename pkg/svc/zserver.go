@@ -26,12 +26,13 @@ type server struct {
 	Timestamp   time.Time
 	Requests    int64
 	mtx         sync.RWMutex
+	mtxDescr    sync.RWMutex
 }
 
 func GRPCConnect() (*grpc.ClientConn, error) {
 	var opts []grpc.DialOption
 	opts = append(opts, grpc.WithInsecure())
-	addr := viper.GetString("addr")
+	addr := viper.GetString("server.address.full")
 	conn, err := grpc.Dial(addr, opts...)
 	if err != nil {
 		return nil, err
@@ -63,8 +64,8 @@ func (s *server) UpdateDescription(ctx context.Context, req *pb.UpdateDescriptio
 		return &pb.UpdateDescriptionResponse{Description: resp.Description}, nil
 	}
 	s.IncRequests()
-	s.Description = req.Description
-	return &pb.UpdateDescriptionResponse{Description: s.Description}, nil
+	s.UpdateDescriptionFromServer(req.Description)
+	return &pb.UpdateDescriptionResponse{Description: s.GetDescriptionFromServer()}, nil
 }
 
 func (s *server) GetDescription(ctx context.Context, req *pb.GetDescriptionRequest) (*pb.GetDescriptionResponse, error) {
@@ -83,7 +84,7 @@ func (s *server) GetDescription(ctx context.Context, req *pb.GetDescriptionReque
 
 	}
 	s.IncRequests()
-	return &pb.GetDescriptionResponse{Description: s.Description}, nil
+	return &pb.GetDescriptionResponse{Description: s.GetDescriptionFromServer()}, nil
 }
 
 // Returns uptime in seconds
@@ -148,7 +149,7 @@ func (s *server) SetMode(ctx context.Context, req *pb.SetModeRequest) (*pb.SetMo
 	}
 	defer conn.Close()
 	client := rpb.NewMyResponderClient(conn)
-	resp, err := client.SetMode(ctx, &rpb.SetModeRequest{})
+	resp, err := client.SetMode(ctx, &rpb.SetModeRequest{Mode: req.Mode})
 	if err != nil {
 		return nil, err
 	}
@@ -178,20 +179,29 @@ func (s *server) Restart(ctx context.Context, req *pb.RestartRequest) (*pb.Resta
 
 // NewBasicServer returns an instance of the default server interface
 func NewBasicServer() (pb.MyAppServer, error) {
-	return &server{Description: "Portal", Timestamp: time.Now()}, nil
-	//TODO use Viper
-	//Incapsulate client
+	return &server{Description: viper.GetString("app.id"), Timestamp: time.Now()}, nil
 }
 
 func (s *server) GetRequestsFromServer() int {
 	s.mtx.RLock()
-	tmp := s.Requests
-	s.mtx.RUnlock()
-	return int(tmp)
+	defer s.mtx.RUnlock()
+	return int(s.Requests)
 }
 
 func (s *server) IncRequests() {
 	s.mtx.Lock()
 	s.Requests++
 	s.mtx.Unlock()
+}
+
+func (s *server) GetDescriptionFromServer() string {
+	s.mtxDescr.RLock()
+	defer s.mtxDescr.RUnlock()
+	return s.Description
+}
+
+func (s *server) UpdateDescriptionFromServer(description string) {
+	s.mtxDescr.Lock()
+	s.Description = description
+	s.mtxDescr.Unlock()
 }
