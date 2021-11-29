@@ -111,7 +111,8 @@ service MyApp {
 
   rpc SetMode (SetModeRequest) returns (SetModeResponse){
     option (google.api.http) = {
-        get: "/mode/{mode}"
+        patch: "/mode"
+        body: "*"
     };
   }
 
